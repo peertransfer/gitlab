@@ -41,7 +41,7 @@ class Gitlab::Client
     # @option options [Array] :approver_group_ids(optional) An array of Group IDs whose members can approve MRs
     # @return [Gitlab::ObjectifiedHash] MR approval configuration information about the project
     def edit_project_approvers(project, options = {})
-      put("/projects/#{url_encode project}/approvals", body: options)
+      put("/projects/#{url_encode project}/approvers", body: options)
     end
 
     # Get Configuration for approvals on a specific Merge Request.

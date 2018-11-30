@@ -42,13 +42,13 @@ describe Gitlab::Client do
   describe '.edit_project_approvers' do
     before do
       body = { "approver_ids": ['5'], "approver_group_ids": ['1'] }
-      stub_put('/projects/1/approvals', 'project_merge_request_approvals').with(body: body)
+      stub_put('/projects/1/approvers', 'project_merge_request_approvals').with(body: body)
       @project_mr_approvals = Gitlab.edit_project_approvers(1, approver_ids: [5], approver_group_ids: [1])
     end
 
     it 'gets the correct resource' do
       body = { "approver_ids": ['5'], "approver_group_ids": ['1'] }
-      expect(a_put('/projects/1/approvals')
+      expect(a_put('/projects/1/approvers')
         .with(body: body)).to have_been_made
     end
 

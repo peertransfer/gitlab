@@ -79,6 +79,21 @@ class Gitlab::Client
     end
     alias repo_create_release create_release
 
+    # Creates a new proteced tag.
+    #
+    # @example
+    #   Gitlab.create_protected_tag(42, 'prod-*', 0)
+    #   Gitlab.create_tag(42, 'prod-*', 0)
+    #
+    # @param  [Integer, String] project The ID or name of a project.
+    # @param  [String]  name The name of the tag or wildcard
+    # @param  [String]  create_access_level Access levels allowed to create (defaults: 40, maintainer access level)
+    # @return [Gitlab::ObjectifiedHash]
+    def create_protected_tag(project, name, create_access_level)
+      post("/projects/#{url_encode project}/protected_tags", body: { name: name, create_access_level: create_access_level })
+    end
+    alias repo_create_protected_tag create_protected_tag
+
     # Updates the release notes of a given release.  Requires Gitlab >= 8.2.0
     #
     # @example

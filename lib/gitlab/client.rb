@@ -7,6 +7,8 @@ module Gitlab
 
     # Please keep in alphabetical order
     include AccessRequests
+    include ApprovalRules
+    include ApprovalSettings
     include AwardEmojis
     include Boards
     include Branches

@@ -98,6 +98,22 @@ describe Gitlab::Client do
     end
   end
 
+  describe '.create_protected_tag' do
+    before do
+      stub_post('/projects/3/protected_tags', 'protected_tag_create')
+      @protected_tag = Gitlab.create_protected_tag(3, 'prod-*', 40)
+    end
+
+    it 'gets the correct resource' do
+      expect(a_post('/projects/3/protected_tags')).to have_been_made
+    end
+
+    it 'returns information about a new protected tag' do
+      expect(@protected_tag.name).to eq('prod-*')
+      expect(@protected_tag.create_access_levels).to eq([{"access_level"=>30, "access_level_description"=>"Developers + Maintainers"}])
+    end
+  end
+
   describe '.create_release' do
     before do
       stub_post('/projects/3/repository/tags/0.0.1/release', 'release_create')

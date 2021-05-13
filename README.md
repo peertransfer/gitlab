@@ -1,17 +1,16 @@
 # Gitlab
 
-[![Build Status](https://img.shields.io/travis/NARKOZ/gitlab.svg)](https://travis-ci.org/NARKOZ/gitlab)
-[![Maintainability](https://api.codeclimate.com/v1/badges/2e310b334b1b5db4a7e1/maintainability)](https://codeclimate.com/github/NARKOZ/gitlab)
+[![Build Status](https://img.shields.io/github/workflow/status/NARKOZ/gitlab/CI/master)](https://github.com/NARKOZ/gitlab/actions?query=workflow%3ARuby)
 [![Inline docs](https://inch-ci.org/github/NARKOZ/gitlab.svg)](https://inch-ci.org/github/NARKOZ/gitlab)
 [![Gem version](https://img.shields.io/gem/v/gitlab.svg)](https://rubygems.org/gems/gitlab)
 [![License](https://img.shields.io/badge/license-BSD-red.svg)](https://github.com/NARKOZ/gitlab/blob/master/LICENSE.txt)
 
 [website](https://narkoz.github.io/gitlab) |
-[documentation](https://rubydoc.info/gems/gitlab/frames) |
+[documentation](https://www.rubydoc.info/gems/gitlab/frames) |
 [gitlab-live](https://github.com/NARKOZ/gitlab-live)
 
 Gitlab is a Ruby wrapper and CLI for the [GitLab API](https://docs.gitlab.com/ce/api/README.html).  
-As of version `4.0.0` this gem only supports Ruby 2.0+ and GitLab API v4.
+As of version `4.0.0` this gem only supports GitLab API v4.
 
 ## Installation
 
@@ -28,7 +27,7 @@ gem 'gitlab'
 # gem 'gitlab', github: 'NARKOZ/gitlab'
 ```
 
-Mac OS users can install using Homebrew:
+Mac OS users can install using Homebrew (may not be the latest version):
 
 ```sh
 brew install gitlab-gem
@@ -40,7 +39,7 @@ Configuration example:
 
 ```ruby
 Gitlab.configure do |config|
-  config.endpoint       = 'https://example.net/api/v4' # API endpoint URL, default: ENV['GITLAB_API_ENDPOINT']
+  config.endpoint       = 'https://example.net/api/v4' # API endpoint URL, default: ENV['GITLAB_API_ENDPOINT'] and falls back to ENV['CI_API_V4_URL']
   config.private_token  = 'qEsq1pt6HJPaNciie3MG'       # user's private token or OAuth2 access token, default: ENV['GITLAB_API_PRIVATE_TOKEN']
   # Optional
   # config.user_agent   = 'Custom User Agent'          # user agent, default: 'Gitlab Ruby Gem [version]'
@@ -65,13 +64,21 @@ Gitlab.private_token = 'qEsq1pt6HJPaNciie3MG'
 Gitlab.http_proxy('proxyhost', 8888)
 # proxy server with basic auth
 Gitlab.http_proxy('proxyhost', 8888, 'proxyuser', 'strongpasswordhere')
+# set timeout for responses
+ENV['GITLAB_API_HTTPARTY_OPTIONS'] = '{read_timeout: 60}'
 
 # list projects
 Gitlab.projects(per_page: 5)
 # => [#<Gitlab::ObjectifiedHash:0x000000023326e0 @data={"id"=>1, "code"=>"brute", "name"=>"Brute", "description"=>nil, "path"=>"brute", "default_branch"=>nil, "owner"=>#<Gitlab::ObjectifiedHash:0x00000002331600 @data={"id"=>1, "email"=>"john@example.com", "name"=>"John Smith", "blocked"=>false, "created_at"=>"2012-09-17T09:41:56Z"}>, "private"=>true, "issues_enabled"=>true, "merge_requests_enabled"=>true, "wall_enabled"=>true, "wiki_enabled"=>true, "created_at"=>"2012-09-17T09:41:56Z"}>, #<Gitlab::ObjectifiedHash:0x000000023450d8 @data={"id"=>2, "code"=>"mozart", "name"=>"Mozart", "description"=>nil, "path"=>"mozart", "default_branch"=>nil, "owner"=>#<Gitlab::ObjectifiedHash:0x00000002344ca0 @data={"id"=>1, "email"=>"john@example.com", "name"=>"John Smith", "blocked"=>false, "created_at"=>"2012-09-17T09:41:56Z"}>, "private"=>true, "issues_enabled"=>true, "merge_requests_enabled"=>true, "wall_enabled"=>true, "wiki_enabled"=>true, "created_at"=>"2012-09-17T09:41:57Z"}>, #<Gitlab::ObjectifiedHash:0x00000002344958 @data={"id"=>3, "code"=>"gitlab", "name"=>"Gitlab", "description"=>nil, "path"=>"gitlab", "default_branch"=>nil, "owner"=>#<Gitlab::ObjectifiedHash:0x000000023447a0 @data={"id"=>1, "email"=>"john@example.com", "name"=>"John Smith", "blocked"=>false, "created_at"=>"2012-09-17T09:41:56Z"}>, "private"=>true, "issues_enabled"=>true, "merge_requests_enabled"=>true, "wall_enabled"=>true, "wiki_enabled"=>true, "created_at"=>"2012-09-17T09:41:58Z"}>]
 
-# initialize a new client
-g = Gitlab.client(endpoint: 'https://api.example.com', private_token: 'qEsq1pt6HJPaNciie3MG')
+# initialize a new client with custom headers
+g = Gitlab.client(
+  endpoint: 'https://example.com/api/v4',
+  private_token: 'qEsq1pt6HJPaNciie3MG',
+  httparty: {
+    headers: { 'Cookie' => 'gitlab_canary=true' }
+  }
+)
 # => #<Gitlab::Client:0x00000001e62408 @endpoint="https://api.example.com", @private_token="qEsq1pt6HJPaNciie3MG", @user_agent="Gitlab Ruby Gem 2.0.0">
 
 # get a user
@@ -108,14 +115,14 @@ end
 projects.auto_paginate
 ```
 
-For more information, refer to [documentation](https://rubydoc.info/gems/gitlab/frames).
+For more information, refer to [documentation](https://www.rubydoc.info/gems/gitlab/frames).
 
 ## CLI
 
 It is possible to use this gem as a command line interface to GitLab. In order to make that work you need to set a few environment variables:
 ```sh
 export GITLAB_API_ENDPOINT=https://gitlab.yourcompany.com/api/v4
-export GITLAB_API_PRIVATE_TOKEN=<your private token from /profile/account>
+export GITLAB_API_PRIVATE_TOKEN=<your private token from /profile/account or /profile/personal_access_tokens in newer version>
 # This one is optional and can be used to set any HTTParty option you may need
 # using YAML hash syntax. For example, this is how you would disable SSL
 # verification (useful if using a self-signed cert).

@@ -2,7 +2,7 @@
 
 require 'spec_helper'
 
-describe Gitlab::Client do
+RSpec.describe Gitlab::Client do
   describe '.user_merge_requests' do
     before do
       stub_get('/merge_requests', 'merge_requests')
@@ -47,6 +47,17 @@ describe Gitlab::Client do
     it 'returns information about a merge request' do
       expect(@merge_request.project_id).to eq(3)
       expect(@merge_request.assignee.name).to eq('Jack Smith')
+    end
+  end
+
+  describe '.merge_request_participants' do
+    before do
+      stub_get('/projects/3/merge_requests/1/participants', 'participants')
+      Gitlab.merge_request_participants(3, 1)
+    end
+
+    it 'gets the correct resource' do
+      expect(a_get('/projects/3/merge_requests/1/participants')).to have_been_made
     end
   end
 
@@ -292,7 +303,7 @@ describe Gitlab::Client do
 
     it 'posts the correct resource' do
       expect(a_post('/projects/3/merge_requests/2/discussions')
-        .with(body: 'body=Discussion&position[old_line]=1')).to have_been_made
+        .with(body: 'body=Discussion&position[old_line]=1'.gsub('[', '%5B').gsub(']', '%5D'))).to have_been_made
     end
 
     it 'returns information about the discussions' do
@@ -394,6 +405,23 @@ describe Gitlab::Client do
     it 'returns diff, with array of diffs in version' do
       expect(@diff.diffs).to be_a Array
       expect(@diff.diffs.first['old_path']).to eq('LICENSE')
+    end
+  end
+
+  describe '.rebase_merge_request' do
+    before do
+      stub_put('/projects/3/merge_requests/105/rebase', 'merge_request_rebase')
+        .with(body: { skip_ci: true })
+      @response = Gitlab.rebase_merge_request(3, 105, skip_ci: true)
+    end
+
+    it 'gets correct resource' do
+      expect(a_put('/projects/3/merge_requests/105/rebase')
+        .with(body: { skip_ci: true })).to have_been_made
+    end
+
+    it 'returns rebase in progress response' do
+      expect(@response.rebase_in_progress).to be_truthy
     end
   end
 end

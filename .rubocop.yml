@@ -1,11 +1,16 @@
 ---
 inherit_from: .rubocop_todo.yml
 
-AllCops:
-  TargetRubyVersion: 2.3
+require:
+  - rubocop-performance
+  - rubocop-rspec
 
-Metrics/LineLength:
-  Max: 125
+AllCops:
+  TargetRubyVersion: 2.5
+  NewCops: disable
+
+Layout/LineLength:
+  Max: 123
   Exclude:
     - 'lib/gitlab/client/*'
     - 'spec/**/*'
@@ -13,6 +18,9 @@ Metrics/LineLength:
 Metrics/BlockLength:
   Exclude:
     - 'spec/**/*'
+
+Metrics/ParameterLists:
+  MaxOptionalParameters: 4
 
 Style/Documentation:
   Enabled: false
@@ -22,11 +30,11 @@ Style/ClassAndModuleChildren:
     - 'lib/gitlab/*'
     - 'lib/gitlab/client/*'
 
-Style/FrozenStringLiteralComment:
-  Exclude:
-    - 'spec/gitlab/file_response_spec.rb'
-    - 'spec/gitlab/help_spec.rb'
+Lint/NonDeterministicRequireOrder:
+  Enabled: false
 
-Style/SpecialGlobalVars:
-  Exclude:
-    - 'gitlab.gemspec'
+RSpec/VerifiedDoubles:
+  Enabled: false
+
+RSpec/FilePath:
+  Enabled: false

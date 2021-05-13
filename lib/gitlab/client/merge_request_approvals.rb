@@ -31,17 +31,73 @@ class Gitlab::Client
       post("/projects/#{url_encode project}/approvals", body: options)
     end
 
+    # Gets MR Approval Rules for a project
+    #
+    # @example
+    #   Gitlab.project_merge_request_approval_rules(1)
+    #
+    # @param [Integer] project The ID of a project.
+    # @return [Gitlab::ObjectifiedHash] MR approval rules for the project
+    def project_merge_request_approval_rules(project)
+      get("/projects/#{url_encode project}/approval_rules")
+    end
+
+    # Create MR Approval Rule for a project
+    #
+    # @example
+    #   Gitlab.create_project_merge_request_approval_rule(1, {name: "security", approvals_required: 1})
+    #
+    # @param [Integer] project(required) The ID of a project.
+    # @option options [String] :name(required) The name of the approval rule
+    # @option options [Integer] :approvals_required(required) The number of required approvals for this rule
+    # @option options [Array] :user_ids(optional) The ids of users as approvers
+    # @option options [Array] :group_ids(optional) The ids of groups as approvers
+    # @option options [Array] :protected_branch_ids(optional) The ids of protected branches to scope the rule by
+    # @return [Gitlab::ObjectifiedHash] New MR approval rule
+    def create_project_merge_request_approval_rule(project, options = {})
+      post("/projects/#{url_encode project}/approval_rules", body: options)
+    end
+
+    # Update MR Approval Rule for a project
+    #
+    # @example
+    #   Gitlab.update_project_merge_request_approval_rule(1, {name: "security", approvals_required: 2})
+    #
+    # @param [Integer] project(required) The ID of a project.
+    # @param [Integer] approval_rule_id(required) The ID of a project Approval Rule
+    # @option options [String] :name(required) The name of the approval rule
+    # @option options [Integer] :approvals_required(required) The number of required approvals for this rule
+    # @option options [Array] :user_ids(optional) The ids of users as approvers
+    # @option options [Array] :group_ids(optional) The ids of groups as approvers
+    # @option options [Array] :protected_branch_ids(optional) The ids of protected branches to scope the rule by
+    # @return [Gitlab::ObjectifiedHash] Updated MR approval rule
+    def update_project_merge_request_approval_rule(project, approval_rule_id, options = {})
+      put("/projects/#{url_encode project}/approval_rules/#{approval_rule_id}", body: options)
+    end
+
+    # Delete MR Approval Rule for a project
+    #
+    # @example
+    #   Gitlab.delete_project_merge_request_approval_rule(1, 1)
+    #
+    # @param [Integer] project(required) The ID of a project.
+    # @param [Integer] approval_rule_id(required) The ID of a approval rule
+    # @return [void] This API call returns an empty response body
+    def delete_project_merge_request_approval_rule(project, approval_rule_id)
+      delete("/projects/#{url_encode project}/approval_rules/#{approval_rule_id}")
+    end
+
     # Change allowed approvers and approver groups for a project
     #
     # @example
     #    Gitlab.edit_project_approvers(1, {approver_ids: [5], approver_groups: [1]})
     #
     # @param [Integer] project(required) The ID of a project.
-    # @option options [Array] :approver_ids(optional) An array of User IDs that can approve MRs
-    # @option options [Array] :approver_group_ids(optional) An array of Group IDs whose members can approve MRs
+    # @option options [Array] :approver_ids(required, nil if none) An array of User IDs that can approve MRs
+    # @option options [Array] :approver_group_ids(required, nil if none) An array of Group IDs whose members can approve MRs
     # @return [Gitlab::ObjectifiedHash] MR approval configuration information about the project
     def edit_project_approvers(project, options = {})
-      put("/projects/#{url_encode project}/approvals", body: options)
+      put("/projects/#{url_encode project}/approvers", body: options)
     end
 
     # Get Configuration for approvals on a specific Merge Request.
@@ -76,11 +132,11 @@ class Gitlab::Client
     #
     # @param [Integer] project(required) The ID of a project.
     # @param [Integer] merge_request(required) The IID of a merge_request.
-    # @option options [Array] :approver_ids(optional) An array of User IDs that can approve MRs
-    # @option options [Array] :approver_group_ids(optional) An array of Group IDs whose members can approve MRs
+    # @option options [Array] :approver_ids(required, nil if none) An array of User IDs that can approve MRs
+    # @option options [Array] :approver_group_ids(required, nil if none) An array of Group IDs whose members can approve MRs
     # @return [Gitlab::ObjectifiedHash] MR approval configuration information about the project
     def edit_merge_request_approvers(project, merge_request, options = {})
-      put("/projects/#{url_encode project}/merge_requests/#{merge_request}/approvals", body: options)
+      put("/projects/#{url_encode project}/merge_requests/#{merge_request}/approvers", body: options)
     end
 
     # Approve a merge request
@@ -104,9 +160,22 @@ class Gitlab::Client
     #
     # @param [Integer] project(required) The ID of a project.
     # @param [Integer] merge_request(required) The IID of a merge request.
+    # @option options [String] :sudo(optional) The username of the user you want to remove the approval for
     # @return [void] This API call returns an empty response body.
-    def unapprove_merge_request(project, merge_request)
-      post("/projects/#{url_encode project}/merge_requests/#{merge_request}/unapprove")
+    def unapprove_merge_request(project, merge_request, options = {})
+      post("/projects/#{url_encode project}/merge_requests/#{merge_request}/unapprove", body: options)
+    end
+
+    # Get the approval state of merge requests
+    #
+    # @example
+    #   Gitlab.merge_request_approval_state(5, 36)
+    #
+    # @param  [Integer, String] project The ID or name of a project.
+    # @param  [Integer] id The ID of a merge request.
+    # @return [Array<Gitlab::ObjectifiedHash>]
+    def merge_request_approval_state(project, id)
+      get("/projects/#{url_encode project}/merge_requests/#{id}/approval_state")
     end
   end
 end

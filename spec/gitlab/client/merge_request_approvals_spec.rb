@@ -2,7 +2,7 @@
 
 require 'spec_helper'
 
-describe Gitlab::Client do
+RSpec.describe Gitlab::Client do
   describe '.project_merge_request_approvals' do
     before do
       stub_get('/projects/1/approvals', 'project_merge_request_approvals')
@@ -39,16 +39,78 @@ describe Gitlab::Client do
     end
   end
 
+  describe '.project_merge_request_approval_rules' do
+    before do
+      stub_get('/projects/1/approval_rules', 'project_merge_request_approval_rules')
+      @project_mr_approval_rules = Gitlab.project_merge_request_approval_rules(1)
+    end
+
+    it 'gets the correct resource' do
+      expect(a_get('/projects/1/approval_rules')).to have_been_made
+    end
+
+    it 'returns the paginated list of approval rules' do
+      expect(@project_mr_approval_rules).to be_a Gitlab::PaginatedResponse
+    end
+  end
+
+  describe '.create_project_merge_request_approval_rule' do
+    before do
+      stub_post('/projects/1/approval_rules', 'project_merge_request_approval_rules')
+      @project_mr_approval_rules = Gitlab.create_project_merge_request_approval_rule(1, name: 'security', approvals_required: 1)
+    end
+
+    it 'creates the correct resource' do
+      expect(a_post('/projects/1/approval_rules')).to have_been_made
+    end
+
+    it 'returns the paginated list of approval rules' do
+      expect(@project_mr_approval_rules).to be_a Gitlab::PaginatedResponse
+      expect(@project_mr_approval_rules.first.id).to eq(1)
+      expect(@project_mr_approval_rules.first.name).to eq('security')
+      expect(@project_mr_approval_rules.first.approvals_required).to eq(3)
+    end
+  end
+
+  describe '.update_project_merge_request_approval_rule' do
+    before do
+      stub_put('/projects/1/approval_rules/1', 'project_merge_request_approval_rules')
+      @project_mr_approval_rules = Gitlab.update_project_merge_request_approval_rule(1, 1, name: 'security', approvals_required: 1)
+    end
+
+    it 'updates the correct resource' do
+      expect(a_put('/projects/1/approval_rules/1')).to have_been_made
+    end
+
+    it 'returns the paginated list of approval rules' do
+      expect(@project_mr_approval_rules).to be_a Gitlab::PaginatedResponse
+      expect(@project_mr_approval_rules.first.id).to eq(1)
+      expect(@project_mr_approval_rules.first.name).to eq('security')
+      expect(@project_mr_approval_rules.first.approvals_required).to eq(3)
+    end
+  end
+
+  describe '.delete_project_merge_request_approval_rule' do
+    before do
+      stub_delete('/projects/1/approval_rules/1', 'empty')
+      Gitlab.delete_project_merge_request_approval_rule(1, 1)
+    end
+
+    it 'deletes the correct resource' do
+      expect(a_delete('/projects/1/approval_rules/1')).to have_been_made
+    end
+  end
+
   describe '.edit_project_approvers' do
     before do
       body = { "approver_ids": ['5'], "approver_group_ids": ['1'] }
-      stub_put('/projects/1/approvals', 'project_merge_request_approvals').with(body: body)
+      stub_put('/projects/1/approvers', 'project_merge_request_approvals').with(body: body)
       @project_mr_approvals = Gitlab.edit_project_approvers(1, approver_ids: [5], approver_group_ids: [1])
     end
 
     it 'gets the correct resource' do
       body = { "approver_ids": ['5'], "approver_group_ids": ['1'] }
-      expect(a_put('/projects/1/approvals')
+      expect(a_put('/projects/1/approvers')
         .with(body: body)).to have_been_made
     end
 
@@ -97,13 +159,13 @@ describe Gitlab::Client do
   describe '.edit_merge_request_approvers' do
     before do
       body = { "approver_ids": ['1'], "approver_group_ids": ['5'] }
-      stub_put('/projects/1/merge_requests/5/approvals', 'merge_request_approvals').with(body: body)
+      stub_put('/projects/1/merge_requests/5/approvers', 'merge_request_approvals').with(body: body)
       @merge_request_approvals = Gitlab.edit_merge_request_approvers(1, 5, approver_ids: [1], approver_group_ids: [5])
     end
 
     it 'gets the correct resource' do
       body = { "approver_ids": ['1'], "approver_group_ids": ['5'] }
-      expect(a_put('/projects/1/merge_requests/5/approvals')
+      expect(a_put('/projects/1/merge_requests/5/approvers')
         .with(body: body)).to have_been_made
     end
 
@@ -138,6 +200,23 @@ describe Gitlab::Client do
 
     it 'gets the correct resource' do
       expect(a_post('/projects/1/merge_requests/5/unapprove')).to have_been_made
+    end
+  end
+
+  describe '.merge_request_approval_state' do
+    before do
+      stub_get('/projects/3/merge_requests/1/approval_state', 'merge_request_approval_state')
+      @approval_state = Gitlab.merge_request_approval_state(3, 1)
+    end
+
+    it 'gets the correct resource' do
+      expect(a_get('/projects/3/merge_requests/1/approval_state')).to have_been_made
+    end
+
+    it 'returns information about all approval states of merge request' do
+      expect(@approval_state.approvals_required).to eq(2)
+      expect(@approval_state.approvals_left).to eq(2)
+      expect(@approval_state.approved_by).to be_empty
     end
   end
 end
